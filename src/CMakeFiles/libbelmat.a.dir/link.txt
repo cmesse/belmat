@@ -1,2 +1,0 @@
-/bin/ar qc libbelmat.a CMakeFiles/libbelmat.a.dir/database.cpp.o
-/bin/ranlib libbelmat.a
