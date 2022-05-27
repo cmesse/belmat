@@ -2,8 +2,8 @@
 // Created by Christian Messe on 12/6/21.
 //
 
-#ifndef STRUMPACK_HDF5TOOLS_DATASETS_HPP
-#define STRUMPACK_HDF5TOOLS_DATASETS_HPP
+#ifndef BELMAT_HDF5TOOLS_DATASETS_HPP
+#define BELMAT_HDF5TOOLS_DATASETS_HPP
 
 #include "hdf5tools_datatypes.h"
 

@@ -2,8 +2,8 @@
 // Created by Christian Messe on 12/6/21.
 //
 
-#ifndef STRUMPACK_HDF5TOOLS_ERROR_HPP
-#define STRUMPACK_HDF5TOOLS_ERROR_HPP
+#ifndef BELMAT_HDF5TOOLS_ERROR_HPP
+#define BELMAT_HDF5TOOLS_ERROR_HPP
 
 #include <iostream>
 #include <sstream>
@@ -56,4 +56,4 @@ namespace errortools {
 
 //------------------------------------------------------------------------------
 }
-#endif //STRUMPACK_HDF5TOOLS_ERROR_HPP
+#endif //BELMAT_HDF5TOOLS_ERROR_HPP

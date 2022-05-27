@@ -2,8 +2,8 @@
 // Created by Christian Messe on 12/6/21.
 //
 
-#ifndef STRUMPACK_HDFT5OOLS_READ_HPP
-#define STRUMPACK_HDFT5OOLS_READ_HPP
+#ifndef BELMAT_HDFT5OOLS_READ_HPP
+#define BELMAT_HDFT5OOLS_READ_HPP
 
 #include "hdf5tools_datatypes.h"
 #include "hdf5tools_datasets.h"
@@ -269,4 +269,4 @@ namespace hdf5tools
     }
 //------------------------------------------------------------------------------
 }
-#endif //STRUMPACK_HDFT5OOLS_READ_HPP
+#endif //BELMAT_HDFT5OOLS_READ_HPP

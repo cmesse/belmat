@@ -3,11 +3,8 @@
 //
 
 
-
-
-
-#ifndef STRUMPACK_HDF5TOOLS_DATATYPES_HPP
-#define STRUMPACK_HDF5TOOLS_DATATYPES_HPP
+#ifndef BELMAT_HDF5TOOLS_DATATYPES_HPP
+#define BELMAT_HDF5TOOLS_DATATYPES_HPP
 
 #ifdef HDF5
 #include <hdf5.h>
@@ -99,4 +96,4 @@ namespace hdf5tools
 //------------------------------------------------------------------------------
 }
 
-#endif // STRUMPACK_HDF5TOOLS_DATATYPES_HPP
+#endif // BELMAT_HDF5TOOLS_DATATYPES_HPP
