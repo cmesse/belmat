@@ -4,8 +4,8 @@
 #include <cmath>
 #include <numeric>
 #include "database.h"
-#include "errortools.hpp"
-#include "Hdf5File.hpp"
+#include "errortools.h"
+#include "Hdf5File.h"
 
 namespace belmat
 {

@@ -7,7 +7,7 @@ int main() {
 
     // this is the constructor for the database
     belmat::database currentmap( "database.hdf5", "SultanDelta" );
-    
+
     // the temperature in K
     double T = 7 ;
 

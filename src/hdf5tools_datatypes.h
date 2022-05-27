@@ -17,7 +17,7 @@ typedef int herr_t;
 typedef long long unsigned int hsize_t;
 #endif
 
-#include "errortools.hpp"
+#include "errortools.h"
 
 namespace hdf5tools
 {

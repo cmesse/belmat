@@ -7,7 +7,7 @@
 
 #include <string>
 
-#include "hdf5tools_datatypes.hpp"
+#include "hdf5tools_datatypes.h"
 
 //------------------------------------------------------------------------------
 

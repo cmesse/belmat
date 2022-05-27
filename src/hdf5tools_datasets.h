@@ -5,7 +5,7 @@
 #ifndef STRUMPACK_HDF5TOOLS_DATASETS_HPP
 #define STRUMPACK_HDF5TOOLS_DATASETS_HPP
 
-#include "hdf5tools_datatypes.hpp"
+#include "hdf5tools_datatypes.h"
 
 namespace hdf5tools
 {

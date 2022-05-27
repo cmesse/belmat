@@ -3,11 +3,11 @@
 //
 
 #include <fstream>
-#include "Hdf5File.hpp"
-#include "errortools.hpp"
-#include "hdf5tools_datasets.hpp"
-#include "hdf5tools_read.hpp"
-#include "hdf5tools_write.hpp"
+#include "Hdf5File.h"
+#include "errortools.h"
+#include "hdf5tools_datasets.h"
+#include "hdf5tools_read.h"
+#include "hdf5tools_write.h"
 
 //------------------------------------------------------------------------------
 
