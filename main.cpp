@@ -11,18 +11,20 @@ int main() {
     // and the parameter from MPI_COMM_WORLD
     belmat::database database ;
 
+    database.load_from_file( "database.hdf5", "SultanDelta" );
+
     // this dummy function just calls the analytic function so that we get some
     // numbers. Nico and I need to discuss if we want to introduce a material
     // subclass so that we can store different datasets in one database
 
     // the temperature in K
-    double T = 20 ;
+    double T = 7 ;
 
     // magnetic flux density in T
-    double B = 4.0 ;
+    double B = 6.11 ;
 
     // angle in rad
-    double theta = 0.5236 ;
+    double theta = 1.5708 ; //0.5236 ;
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
