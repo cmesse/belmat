@@ -11,10 +11,12 @@ namespace belmat
 {
 //----------------------------------------------------------------------------
 
-    database::database()
+    database::database( const std::string & filename,
+                        const std::string & tablename )
     {
-        // do nothing for now
-        // later, a lot of stuff will happen here
+#ifdef HDF5
+        this->load_from_file( filename, tablename );
+#endif
     }
 
 //----------------------------------------------------------------------------
@@ -156,7 +158,7 @@ namespace belmat
     void
     database::load_from_file(
             const std::string & filename,
-            const std::string & materialname)
+            const std::string & tablename)
     {
         // reset data
         this->free();
@@ -165,7 +167,7 @@ namespace belmat
         Hdf5File file( filename, Hdf5FileMode::OPEN_RDONLY );
 
         // select the group
-        file.select_group( materialname );
+        file.select_group( tablename );
 
         // get the number of dimensions
         file.read( "dimension", mNumberOfDimensions );
@@ -224,7 +226,7 @@ namespace belmat
 //----------------------------------------------------------------------------
 
     double
-    database::jc( const double T, const double B, const double theta )
+    database::compute( const double T, const double B, const double theta )
     {
 #ifdef HDF5
         mX[ 0 ] = theta ;

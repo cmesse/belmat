@@ -6,17 +6,8 @@ int main() {
     std::cout << "Database Hello World!" << std::endl;
 
     // this is the constructor for the database
-    // we don't need to pass anything yet
-    // later, we will pass the filename to the HDF5 as a string
-    // and the parameter from MPI_COMM_WORLD
-    belmat::database database ;
-
-    database.load_from_file( "database.hdf5", "SultanDelta" );
-
-    // this dummy function just calls the analytic function so that we get some
-    // numbers. Nico and I need to discuss if we want to introduce a material
-    // subclass so that we can store different datasets in one database
-
+    belmat::database currentmap( "database.hdf5", "SultanDelta" );
+    
     // the temperature in K
     double T = 7 ;
 
@@ -35,7 +26,8 @@ int main() {
     // 1: find out how to link the libbelmat.a to SparseLizard
     // 2: find out how to translate this blackbox function into
     //    a SparseLizard expression
-    double jc = database.jc( T, B, theta ) ;
+    double jc = currentmap.compute( T, B, theta ) ;
+
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     // print the result

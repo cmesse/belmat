@@ -52,7 +52,8 @@ namespace belmat
 //----------------------------------------------------------------------------
 
         // the database constructor
-        database();
+        database( const std::string & filename,
+                  const std::string & tablename );
 
 //----------------------------------------------------------------------------
 
@@ -63,7 +64,7 @@ namespace belmat
 
         void
         load_from_file( const std::string & filename,
-                        const std::string & materialname );
+                        const std::string & tablename );
 
 //----------------------------------------------------------------------------
 
@@ -76,7 +77,7 @@ namespace belmat
          * @return
          */
         double
-        jc( const double T, const double B, const double theta ) ;
+        compute( const double T, const double B, const double theta ) ;
 
 //------------------------------------------------------------------------
     private:
