@@ -226,7 +226,13 @@ namespace belmat
     double
     database::jc( const double T, const double B, const double theta )
     {
-        /* double Jc0 = 3.5e10/46.5 ;
+#ifdef HDF5
+        mX[ 0 ] = theta ;
+        mX[ 1 ] = T ;
+        mX[ 2 ] = B ;
+        return ( this->*mInterpolate )( mX );
+#else
+        double Jc0 = 3.5e10/46.5 ;
         double alpha=1.2 ;
         double beta=1 ;
         double gamma=8.02 ;
@@ -235,13 +241,8 @@ namespace belmat
         double eps= std::sqrt(std::pow(std::sin(theta),2)/gamma
                     +std::pow(std::cos(theta),2) );
 
-        return Jc0/std::pow(1+eps*std::pow(B/Bc0,beta),alpha); */
-
-        mX[ 0 ] = theta ;
-        mX[ 1 ] = T ;
-        mX[ 2 ] = B ;
-        return ( this->*mInterpolate )( mX );
-
+        return Jc0/std::pow(1+eps*std::pow(B/Bc0,beta),alpha);
+#endif
     }
 
 //----------------------------------------------------------------------------
