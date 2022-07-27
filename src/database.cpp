@@ -3,9 +3,11 @@
 //
 #include <cmath>
 #include <numeric>
-#include "database.h"
 #include "errortools.h"
+
+#include "mpitools_comm.h"
 #include "Hdf5File.h"
+#include "database.h"
 
 namespace belmat
 {
@@ -15,7 +17,17 @@ namespace belmat
                         const std::string & tablename )
     {
 #ifdef HDF5
-        this->load_from_file( filename, tablename );
+        if( mpitools::comm_rank() == 0 )
+        {
+            this->load_from_file(filename, tablename);
+        }
+
+        // send data from master to others
+        this->distribute_data() ;
+
+        // link the shape function
+        this->link_interpolation_function();
+
 #endif
     }
 
@@ -72,6 +84,123 @@ namespace belmat
         mMemorySize = 0 ;
         mNumberOfPointsPerCell = 0 ;
 
+    }
+
+//----------------------------------------------------------------------------
+
+    void
+    database::distribute_data()
+    {
+        // wait for other procs
+        mpitools::comm_barrier() ;
+
+        // prepare info tag
+        std::vector< uint > iinfo( 8, 0 );
+        std::vector< double > dinfo ;
+
+        if( mpitools::comm_rank() == 0 )
+        {
+            std::size_t count = 0 ;
+
+            iinfo[ count++ ] = mInterpolationOrder ;
+            iinfo[ count++ ] = mNumberOfDimensions ;
+            iinfo[ count++ ] = mMemorySize ;
+
+            for( uint k=0; k<mNumberOfDimensions; ++k )
+            {
+                iinfo[ count++ ] = mNumPoints[ k ];
+            }
+
+            mpitools::distribute( iinfo );
+
+            dinfo.resize( 3 * mNumberOfDimensions );
+
+            // reset counter
+            count = 0 ;
+
+            // send min and max data
+            for( uint k=0; k<mNumberOfDimensions; ++k )
+            {
+                dinfo[ count++ ] = mXmin[ k ];
+            }
+            for( uint k=0; k<mNumberOfDimensions; ++k )
+            {
+                dinfo[ count++ ] = mXmax[ k ];
+            }
+            for( uint k=0; k<mNumberOfDimensions; ++k )
+            {
+                dinfo[ count++ ] = mStep[ k ];
+            }
+            mpitools::distribute( dinfo );
+
+            // prepare data
+            dinfo.resize( mMemorySize );
+            std::copy( mValues, mValues + mMemorySize, dinfo.begin() );
+
+            // send data
+            mpitools::distribute( dinfo );
+
+        }
+        else
+        {
+            std::size_t count = 0 ;
+
+            mpitools::distribute( iinfo );
+
+            // unpack info
+            mInterpolationOrder    = iinfo[ count++ ];
+            mNumberOfDimensions    = iinfo[ count++ ];
+            mMemorySize            = iinfo[ count++ ] ;
+
+            mNumPoints = ( uint * ) malloc( mNumberOfDimensions * sizeof ( uint  ) ) ;
+            for( uint k=0; k<mNumberOfDimensions; ++k )
+            {
+                mNumPoints[ k ] = iinfo[ count++ ];
+            }
+
+            // order, but as double
+            mOrder = double( mInterpolationOrder );
+
+            // compute the inverse of the order
+            mInvOrder = 1.0 / mOrder ;
+
+            // receive double values
+            mpitools::distribute( dinfo );
+
+            // allocate data
+            mXmin = ( double * ) malloc( mNumberOfDimensions * sizeof ( double  ) ) ;
+            mXmax = ( double * ) malloc( mNumberOfDimensions * sizeof ( double  ) ) ;
+            mStep = ( double * ) malloc( mNumberOfDimensions * sizeof ( double  ) ) ;
+
+            // allocate work array
+            mX = ( double * ) malloc( mNumberOfDimensions * sizeof ( double ) ) ;
+
+            // populate data
+            count = 0 ;
+            for( uint k=0; k<mNumberOfDimensions; ++k )
+            {
+                mXmin[ k ] = dinfo[ count++ ];
+            }
+            for( uint k=0; k<mNumberOfDimensions; ++k )
+            {
+                mXmax[ k ] = dinfo[ count++ ];
+            }
+            for( uint k=0; k<mNumberOfDimensions; ++k )
+            {
+                mStep[ k ] = dinfo[ count++ ];
+            }
+
+            mpitools::distribute( dinfo );
+
+            // allocate value memory
+            mValues = ( double * ) malloc( mMemorySize * sizeof ( double  ) ) ;
+
+            // copy data from vector
+            std::copy( dinfo.begin(), dinfo.end(), mValues );
+        }
+
+        // wait for other procs
+        mpitools::comm_barrier() ;
     }
 
 //----------------------------------------------------------------------------
@@ -218,9 +347,6 @@ namespace belmat
         // read the data
         mValues = ( double * ) malloc( mMemorySize * sizeof ( double  ) ) ;
         file.read( "values", mValues, mMemorySize );
-
-        // link the shape function
-        this->link_interpolation_function();
     }
 
 //----------------------------------------------------------------------------

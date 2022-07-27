@@ -5,11 +5,14 @@ set(CMAKE_CXX_STANDARD 11)
 
 option( BUILD_SHARED "Build Shared Library instead of static one" OFF )
 option( USE_HDF5 "Link to HDF5 libraries" ON )
+option( USE_MPI "Link to MPI libraries" ON )
+option( USE_PETSC "FIX MPI for PETSC (standalone only)" OFF )
+
 option( USE_DEBUG "Use Debug Flags" OFF )
 
 # temporary settings
-set( HDF5_INCLUDE_PATH "/opt/tpls/sw_gcc/include" )
-set( HDF5_LIBRARY_PATH "/opt/tpls/sw_gcc/lib64/" )
+#set( HDF5_INCLUDE_PATH "/opt/tpls/sw_gcc/include" )
+#set( HDF5_LIBRARY_PATH "/opt/tpls/sw_gcc/lib64/" )
 
 # make sure that the library and the demo are
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR} )
@@ -23,11 +26,35 @@ endif()
 
 if( USE_HDF5 )
     add_definitions( -DHDF5 )
+    if( DEFINED ${HDF5_INCLUDE_PATH} )
+    elseif( DEFINED ENV{TPLS} )
+        set( HDF5_INCLUDE_PATH "$ENV{TPLS}/include" )
+        set( HDF5_LIBRARY_PATH "$ENV{TPLS}/lib" )
+    elseif( DEFINED ENV{PETSC_DIR} )
+        set( HDF5_INCLUDE_PATH "$ENV{PETSC_DIR}/include" )
+        set( HDF5_LIBRARY_PATH "$ENV{PETSC_DIR}/lib" )
+    endif()
+
     include_directories( ${HDF5_INCLUDE_PATH} )
-    set( BELMAT_LIBS "-Wl,-rpath,{HDF5_LIBRARY_PATH} -L${HDF5_LIBRARY_PATH} -lhdf5_hl -lhdf5 -lz -ldl" )
+    set( BELMAT_LIBS "-Wl,-rpath,${HDF5_LIBRARY_PATH} -L${HDF5_LIBRARY_PATH} -lhdf5_hl -lhdf5 -lz -ldl" )
 endif()
+if( USE_MPI )
+    add_definitions( -DMPI )
+    add_definitions( -DOMPI_SKIP_MPICXX )
+    if( DEFINED ${MPI_INCLUDE_PATH} )
+    elseif( DEFINED ENV{TPLS} )
+        set( MPI_INCLUDE_PATH "$ENV{TPLS}/include" )
+    elseif( DEFINED ENV{MPI_HOME} )
+        set( MPI_INCLUDE_PATH "$ENV{MPI_HOME}/include" )
+    endif()
 
-
+    include_directories( ${MPI_INCLUDE_PATH} )
+    set( CMAKE_C_COMPILER  mpicc )
+    set( CMAKE_CXX_COMPILER mpicxx )
+endif()
+if( USE_PETSC )
+    add_definitions( -DPETSC )
+endif()
 
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/src  )
 add_subdirectory( src )

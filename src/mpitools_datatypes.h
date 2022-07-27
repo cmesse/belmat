@@ -5,23 +5,21 @@
 #ifndef BELMAT_MPITOOLS_DATATYPES_H
 #define BELMAT_MPITOOLS_DATATYPES_H
 
+#include <complex>
+
 #ifdef MPI
 #include <mpi.h>
-namespace mpitools
-{
-    typedef MPI_Datatype mpi_t ;
-    typedef int proc_t ;
-    }
-#else
-// define fake type if there is no MPI
-typedef int mpi_t;
 #endif
 
-// datatype for mpi procs
-typedef int proc_t ;
-
 namespace mpitools
 {
+#ifdef MPI
+    typedef MPI_Datatype mpi_t ;
+#else
+    // define fake type if there is no MPI
+    typedef int mpi_t;
+#endif
+    typedef int proc_t ;
 
 //------------------------------------------------------------------------------
 
@@ -40,7 +38,6 @@ namespace mpitools
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #ifdef MPI
-
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     template<> inline mpi_t
