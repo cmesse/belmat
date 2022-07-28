@@ -68,6 +68,11 @@ namespace belmat
             ::free( mStep );
             mStep = nullptr ;
         }
+        if ( mInvStep != nullptr )
+        {
+            ::free( mInvStep );
+            mInvStep = nullptr ;
+        }
         if ( mValues != nullptr )
         {
             ::free( mValues );
@@ -171,6 +176,7 @@ namespace belmat
             mXmin = ( double * ) malloc( mNumberOfDimensions * sizeof ( double  ) ) ;
             mXmax = ( double * ) malloc( mNumberOfDimensions * sizeof ( double  ) ) ;
             mStep = ( double * ) malloc( mNumberOfDimensions * sizeof ( double  ) ) ;
+            mInvStep = ( double * ) malloc( mNumberOfDimensions * sizeof ( double  ) ) ;
 
             // allocate work array
             mX = ( double * ) malloc( mNumberOfDimensions * sizeof ( double ) ) ;
@@ -188,6 +194,7 @@ namespace belmat
             for( uint k=0; k<mNumberOfDimensions; ++k )
             {
                 mStep[ k ] = dinfo[ count++ ];
+                mInvStep[ k ] = 1.0 / mStep[ k ];
             }
 
             mpitools::distribute( dinfo );
@@ -212,27 +219,33 @@ namespace belmat
         {
             case( 1 ) :
             {
-                switch ( mInterpolationOrder ) {
-                    case (1) : {
+                switch ( mInterpolationOrder )
+                {
+                    case ( 1 ) :
+                    {
                         mInterpolate = &database::interpolate_line2;
                         mNumberOfPointsPerCell = 2;
                         break;
                     }
-                    case (2) : {
+                    case ( 2 ) :
+                    {
                         mInterpolate = &database::interpolate_line3;
                         mNumberOfPointsPerCell = 3;
                         break;
                     }
-                    case (3) : {
+                    case ( 3 ) :
+                    {
                         mInterpolate = &database::interpolate_line4;
                         mNumberOfPointsPerCell = 4;
                         break;
                     }
-                    default : {
+                    default :
+                    {
                         errortools::error(false, "Invalid interpolation order: %u",
                                           (unsigned int) mInterpolationOrder);
                     }
                 }
+                break ;
             }
             case( 2 ) :
             {
@@ -339,15 +352,22 @@ namespace belmat
         file.read( "numpoints", mNumPoints, mNumberOfDimensions );
 
         // read the stepsize
-        mStep =  ( double * ) malloc( mNumberOfDimensions * sizeof ( double  ) ) ;
+        mStep =  ( double * ) malloc( mNumberOfDimensions * sizeof ( double ) ) ;
         file.read( "step", mStep, mNumberOfDimensions );
 
+        // inverse stepsize
+        mInvStep = ( double * ) malloc( mNumberOfDimensions * sizeof ( double ) ) ;
+        for( uint k = 0; k<mNumberOfDimensions; ++k )
+        {
+            mInvStep[ k ] = 1.0 / mStep[ k ];
+        }
+
         // read the offset
-        mXmin = ( double * ) malloc( mNumberOfDimensions * sizeof ( double  ) ) ;
+        mXmin = ( double * ) malloc( mNumberOfDimensions * sizeof ( double ) ) ;
         file.read( "offset", mXmin, mNumberOfDimensions );
 
         // compute the maximum values
-        mXmax = ( double * ) malloc( mNumberOfDimensions * sizeof ( double  ) ) ;
+        mXmax = ( double * ) malloc( mNumberOfDimensions * sizeof ( double ) ) ;
         for( uint d=0; d<mNumberOfDimensions; ++d )
         {
             mXmax[ d ] = mXmin[ d ] + mStep[ d ] *  double( mNumPoints[ d ] - 1 ) * mInvOrder ;
@@ -371,6 +391,25 @@ namespace belmat
         // read the data
         mValues = ( double * ) malloc( mMemorySize * sizeof ( double  ) ) ;
         file.read( "values", mValues, mMemorySize );
+    }
+
+//----------------------------------------------------------------------------
+
+    double
+    database::compute( const double T )
+    {
+        mX[ 0 ] = T ;
+        return ( this->*mInterpolate )( mX );
+    }
+
+//----------------------------------------------------------------------------
+
+    double
+    database::compute( const double T, const double B )
+    {
+        mX[ 0 ] = T ;
+        mX[ 1 ] = B ;
+        return ( this->*mInterpolate )( mX );
     }
 
 //----------------------------------------------------------------------------
@@ -427,7 +466,7 @@ namespace belmat
         mWork[ 2 ] = mValues[ i+1 ];
 
         // step 3: compute parameter coordinate
-        const double xi  = this->xtoxi_linear( x, i, 0 );
+        const double xi  = this->xtoxi_higher_order( x, i, 0 );
         double xi2 = xi*xi ;
 
         // step 4: compute the interpolation
@@ -447,7 +486,7 @@ namespace belmat
         const uint i = find_cell_higher_order( x, 0 );
 
         // step : compute parameter coordinate
-        const double xi  = this->xtoxi_linear( x, i, 0 );
+        const double xi  = this->xtoxi_higher_order( x, i, 0 );
 
         // compute helpers
         mWork[ 0 ] = 1.0 - xi ;

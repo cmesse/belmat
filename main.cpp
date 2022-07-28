@@ -53,14 +53,15 @@ int main( int    argc,
     }
 
     // this is the constructor for the database
-    belmat::database currentmap( "database.hdf5", "SultanDelta" );
-
+    //belmat::database currentmap( "database.hdf5", "SultanDelta" );
+    belmat::database heat( "materials.hdf5", "CopperCp" );
+    belmat::database lambda( "materials.hdf5", "CopperK_RRR300" );
 
     // the temperature in K
-    double T = 7 ;
+    double T = 20.0 ; // 7 ;
 
     // magnetic flux density in T
-    double B = 6.11 ;
+    double B = 15.0 ;; 6.11 ;
 
     // angle in rad
     double theta = 1.5708 ; //0.5236 ;
@@ -74,12 +75,17 @@ int main( int    argc,
     // 1: find out how to link the libbelmat.a to SparseLizard
     // 2: find out how to translate this blackbox function into
     //    a SparseLizard expression
-    double jc = currentmap.compute( T, B, theta ) ;
+    //double jc = currentmap.compute( T, B, theta ) ;
+    double lambda_value = lambda.compute( T, B );
+    double cp_value = heat.compute( T );
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     // print the result
-    std::cout << "proc " << mpitools::comm_rank() << ": T=" << T << " B=" << B << " theta=" << theta << " jc=" << jc << std::endl ;
+    //std::cout << "proc " << mpitools::comm_rank() << ": T=" << T << " B=" << B << " theta=" << theta << " jc=" << jc << std::endl ;
+
+
+    std::cout << "proc " << mpitools::comm_rank() << ": T=" << T << " B=" << B << " lambda=" << lambda_value << " cp=" << cp_value << std::endl ;
 
     return mpitools::finanize() ;
 }

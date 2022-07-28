@@ -35,6 +35,10 @@ namespace belmat
         // stepwidth
         double * mStep = nullptr ;
 
+        // inverse stepwidth
+        double * mInvStep = nullptr ;
+
+
         // the actual data of the set
         double * mValues = nullptr ;
 
@@ -66,6 +70,30 @@ namespace belmat
         void
         load_from_file( const std::string & filename,
                         const std::string & tablename );
+
+//----------------------------------------------------------------------------
+
+        /**
+         * a dummy function that returns the critical current density
+         *
+         * @param T        temperature in K
+         * @param B        magnetic field strength in T
+         * @return
+         */
+        double
+        compute( const double T ) ;
+
+//----------------------------------------------------------------------------
+
+        /**
+         * a dummy function that returns the critical current density
+         *
+         * @param T        temperature in K
+         * @param B        magnetic field strength in T
+         * @return
+         */
+        double
+        compute( const double T, const double B ) ;
 
 //----------------------------------------------------------------------------
 
@@ -182,7 +210,7 @@ namespace belmat
             }
             else
             {
-                return uint( (x[ dimension ] - mXmin[ dimension ] ) / mStep[ dimension ] );
+                return uint( (x[ dimension ] - mXmin[ dimension ] ) * mInvStep[ dimension ] );
             }
         }
 
@@ -201,7 +229,7 @@ namespace belmat
             }
             else
             {
-                return mInterpolationOrder * std::size_t ( (x[ dimension ] - mXmin[ dimension ] ) / mStep[ dimension ] );
+                return mInterpolationOrder * std::size_t ( ( x[ dimension ] - mXmin[ dimension ] ) * mInvStep[ dimension ] );
             }
         }
 
@@ -211,7 +239,7 @@ namespace belmat
         xtoxi_linear( const double * x, const uint index, const unsigned int dimension ) const
         {
             return ( x[ dimension ] + x[ dimension ]
-                - mXmin[ dimension ] - mXmin[ dimension ] ) / mStep[ dimension ]
+                - mXmin[ dimension ] - mXmin[ dimension ] ) * mInvStep[ dimension ]
                          - index - index - 1 ;
         }
 
@@ -221,7 +249,7 @@ namespace belmat
         xtoxi_quadratic( const double * x, const uint index, const unsigned int dimension ) const
         {
             return ( x[ dimension ] + x[ dimension ]
-                     - mXmin[ dimension ] - mXmin[ dimension ] ) / mStep[ dimension ]
+                     - mXmin[ dimension ] - mXmin[ dimension ] ) * mInvStep[ dimension ]
                    - index - 1 ;
         }
 
@@ -232,7 +260,7 @@ namespace belmat
         {
             return 2 * ( x[ dimension ] - mXmin[ dimension ]
                     - mInvOrder * index * mStep[ dimension ] )
-                    / mStep[ dimension ] - 1 ;
+                       * mInvStep[ dimension ] - 1 ;
         }
 
 //------------------------------------------------------------------------
