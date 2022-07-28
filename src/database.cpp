@@ -210,6 +210,30 @@ namespace belmat
     {
         switch( mNumberOfDimensions )
         {
+            case( 1 ) :
+            {
+                switch ( mInterpolationOrder ) {
+                    case (1) : {
+                        mInterpolate = &database::interpolate_line2;
+                        mNumberOfPointsPerCell = 2;
+                        break;
+                    }
+                    case (2) : {
+                        mInterpolate = &database::interpolate_line3;
+                        mNumberOfPointsPerCell = 3;
+                        break;
+                    }
+                    case (3) : {
+                        mInterpolate = &database::interpolate_line4;
+                        mNumberOfPointsPerCell = 4;
+                        break;
+                    }
+                    default : {
+                        errortools::error(false, "Invalid interpolation order: %u",
+                                          (unsigned int) mInterpolationOrder);
+                    }
+                }
+            }
             case( 2 ) :
             {
                 switch ( mInterpolationOrder )
@@ -371,6 +395,71 @@ namespace belmat
 
         return Jc0/std::pow(1+eps*std::pow(B/Bc0,beta),alpha);
 #endif
+    }
+
+//----------------------------------------------------------------------------
+
+    double
+    database::interpolate_line2( const double * x )
+    {
+        // identify the indices of the first point of the cell
+        const uint i = find_cell_linear( x, 0 );
+
+        // compute parameter coordinates
+        const double xi  = this->xtoxi_linear( x, i, 0 );
+
+        // compute the interpolation
+        return 0.5 * (  mValues[ i ] * ( 1.0 - xi )
+                      + mValues[ i + 1 ] * ( 1.0 + xi ) );
+    }
+
+//----------------------------------------------------------------------------
+
+    double
+    database::interpolate_line3( const double * x )
+    {
+        // step 1: identify the indices of the first point of the cell
+        const uint i = find_cell_higher_order( x, 0 );
+
+        // step 2: collect the node data
+        mWork[ 0 ] = mValues[ i ];
+        mWork[ 1 ] = mValues[ i+2 ];
+        mWork[ 2 ] = mValues[ i+1 ];
+
+        // step 3: compute parameter coordinate
+        const double xi  = this->xtoxi_linear( x, i, 0 );
+        double xi2 = xi*xi ;
+
+        // step 4: compute the interpolation
+        mWork[ 0 ] *=  xi2 - xi ;
+        mWork[ 1 ] *= xi2 + xi  ;
+        mWork[ 2 ] *= 1.0 - xi2;
+
+        return 0.5 * ( mWork[ 0 ] +  mWork[ 1 ] ) +  mWork[ 2 ] ;
+    }
+
+//----------------------------------------------------------------------------
+
+    double
+    database::interpolate_line4( const double * x )
+    {
+        // step 1: identify the indices of the first point of the cell
+        const uint i = find_cell_higher_order( x, 0 );
+
+        // step : compute parameter coordinate
+        const double xi  = this->xtoxi_linear( x, i, 0 );
+
+        // compute helpers
+        mWork[ 0 ] = 1.0 - xi ;
+        mWork[ 1 ] = 1.0 + xi ;
+        mWork[ 2 ] = 3.0 * xi - 1.0 ;
+        mWork[ 3 ] = 3.0 * xi + 1.0 ;
+
+        // compute interpolation
+        return  (   mWork[ 2 ] * mWork[ 3 ] *
+                  ( mWork[ 0 ] * mValues[ i ] + mWork[ 1 ] * mValues[ i+3 ] )
+                + 9.0 * mWork[ 0 ] * mWork[ 1 ] * ( mWork[ 3 ] * mValues[ i+2 ]
+                 - mWork[ 2 ] * mValues[ i+1 ] ) ) *  0.06250 ;
     }
 
 //----------------------------------------------------------------------------
