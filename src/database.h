@@ -38,9 +38,11 @@ namespace belmat
         // inverse stepwidth
         double * mInvStep = nullptr ;
 
-
         // the actual data of the set
         double * mValues = nullptr ;
+
+        // coefficients, only for 1D cubic
+        double * mCoeffs = nullptr ;
 
         // work vector for the interpolation
         double * mWork = nullptr ;
@@ -145,13 +147,13 @@ namespace belmat
 
 //----------------------------------------------------------------------------
 
-         double
-         interpolate_quad4( const double * x );
+        double
+        interpolate_quad4( const double * x );
 
 //----------------------------------------------------------------------------
 
-         double
-         interpolate_quad9( const double * x );
+        double
+        interpolate_quad9( const double * x );
 
 //----------------------------------------------------------------------------
 
@@ -160,29 +162,29 @@ namespace belmat
 
 //----------------------------------------------------------------------------
 
-         double
-         interpolate_hex8( const double * x );
+        double
+        interpolate_hex8( const double * x );
 
 //----------------------------------------------------------------------------
 
-         double
-         interpolate_hex27( const double * x );
+        double
+        interpolate_hex27( const double * x );
 
 //----------------------------------------------------------------------------
 
-         double
-         interpolate_hex64( const double * x );
+        double
+        interpolate_hex64( const double * x );
 
 //----------------------------------------------------------------------------
 
         /**
          * the index function for the 2d case
          */
-         inline uint
-         index( const uint i, const uint j ) const
-         {
-             return mNumPoints[ 0 ] * j + i ;
-         }
+        inline uint
+        index( const uint i, const uint j ) const
+        {
+            return mNumPoints[ 0 ] * j + i ;
+        }
 
 //----------------------------------------------------------------------------
 
@@ -193,6 +195,28 @@ namespace belmat
         index( const uint i, const uint j, const uint k ) const
         {
             return mNumPoints[ 0 ] *  ( k * mNumPoints[ 1 ] +  j ) + i ;
+        }
+
+//----------------------------------------------------------------------------
+
+        // only for 1d cubic spline
+        inline uint
+        find_cell_1dspline( const double x )
+        {
+            long int pivot = std::floor( ( x - mXmin[ 0 ] ) * mInvStep[ 0 ] ) ;
+
+            if( pivot < 0 )
+            {
+                return 0 ;
+            }
+            else if ( pivot >= mNumPoints[ 0 ] )
+            {
+                return 4 * ( mNumPoints[ 0 ] - 1 );
+            }
+            else
+            {
+                return 4 * pivot ;
+            }
         }
 
 //------------------------------------------------------------------------
@@ -216,7 +240,7 @@ namespace belmat
 
 //------------------------------------------------------------------------
 
-        inline std::size_t
+        inline uint
         find_cell_higher_order( const double * x, const unsigned int dimension ) const
         {
             if( x[ dimension ] < mXmin[ dimension ] )
@@ -229,7 +253,7 @@ namespace belmat
             }
             else
             {
-                return mInterpolationOrder * std::size_t ( ( x[ dimension ] - mXmin[ dimension ] ) * mInvStep[ dimension ] );
+                return mInterpolationOrder * uint( ( x[ dimension ] - mXmin[ dimension ] ) * mInvStep[ dimension ] );
             }
         }
 
@@ -261,6 +285,24 @@ namespace belmat
             return 2 * ( x[ dimension ] - mXmin[ dimension ]
                     - mInvOrder * index * mStep[ dimension ] )
                        * mInvStep[ dimension ] - 1 ;
+        }
+
+
+//------------------------------------------------------------------------
+
+
+        inline double
+        interpolate_1dspline( const double * x )
+        {
+            double X = *x ;
+
+            // get index
+            std::size_t k = this->find_cell_1dspline( X );
+
+            return ( (   mCoeffs[ k ]     * X
+                       + mCoeffs[ k+1 ] ) * X
+                       + mCoeffs[ k+2 ] ) * X
+                       + mCoeffs[ k+3 ]  ;
         }
 
 //------------------------------------------------------------------------

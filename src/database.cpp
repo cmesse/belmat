@@ -83,6 +83,11 @@ namespace belmat
             ::free( mWork );
             mWork = nullptr ;
         }
+        if( mCoeffs != nullptr )
+        {
+            ::free( mCoeffs );
+            mCoeffs = nullptr ;
+        }
 
         mInterpolationOrder = 0 ;
         mNumberOfDimensions = 0 ;
@@ -138,10 +143,18 @@ namespace belmat
             }
             mpitools::distribute( dinfo );
 
-            // prepare data
-            dinfo.resize( mMemorySize );
-            std::copy( mValues, mValues + mMemorySize, dinfo.begin() );
-
+            // catch special case
+            if( mOrder == 0 )
+            {
+                dinfo.resize( 4 * mMemorySize );
+                std::copy(mCoeffs, mCoeffs + 4 * mMemorySize, dinfo.begin() );
+            }
+            else
+            {
+                // prepare data
+                dinfo.resize(mMemorySize);
+                std::copy(mValues, mValues + mMemorySize, dinfo.begin());
+            }
             // send data
             mpitools::distribute( dinfo );
 
@@ -199,11 +212,22 @@ namespace belmat
 
             mpitools::distribute( dinfo );
 
-            // allocate value memory
-            mValues = ( double * ) malloc( mMemorySize * sizeof ( double  ) ) ;
+            if( mOrder == 0 )
+            {
+                // allocate memory for coefficients
+                mCoeffs = ( double * ) malloc(4 * mMemorySize * sizeof( double ) );
 
-            // copy data from vector
-            std::copy( dinfo.begin(), dinfo.end(), mValues );
+                // copy data from vector
+                std::copy(dinfo.begin(), dinfo.end(), mCoeffs );
+            }
+            else
+            {
+                // allocate value memory
+                mValues = ( double * ) malloc(mMemorySize * sizeof( double ) );
+
+                // copy data from vector
+                std::copy(dinfo.begin(), dinfo.end(), mValues );
+            }
         }
 
         // wait for other procs
@@ -221,6 +245,12 @@ namespace belmat
             {
                 switch ( mInterpolationOrder )
                 {
+                    case ( 0 ) :
+                    {
+                        mInterpolate = & database::interpolate_1dspline ;
+                        mNumberOfPointsPerCell = 0 ;
+                        break ;
+                    }
                     case ( 1 ) :
                     {
                         mInterpolate = &database::interpolate_line2;
@@ -314,9 +344,12 @@ namespace belmat
             }
         }
 
-        // allocate work vector
-        mWork = ( double * )
-                malloc( mNumberOfPointsPerCell * sizeof ( double ) ) ;
+        if( mNumberOfPointsPerCell > 0 )
+        {
+            // allocate work vector
+            mWork = (double *)
+                    malloc(mNumberOfPointsPerCell * sizeof(double));
+        }
     }
 
 //----------------------------------------------------------------------------
@@ -324,7 +357,7 @@ namespace belmat
     void
     database::load_from_file(
             const std::string & filename,
-            const std::string & tablename)
+            const std::string & tablename )
     {
         // reset data
         this->free();
@@ -388,9 +421,19 @@ namespace belmat
             mMemorySize *= mNumPoints[ d ];
         }
 
-        // read the data
-        mValues = ( double * ) malloc( mMemorySize * sizeof ( double  ) ) ;
-        file.read( "values", mValues, mMemorySize );
+        if( mOrder == 0 )
+        {
+            // read the precomputed coefficients
+            std::size_t tSize = 4 * mMemorySize ;
+            mCoeffs = ( double * ) malloc( tSize * sizeof ( double  ) ) ;
+            file.read( "coeffs", mCoeffs, tSize );
+        }
+        else
+        {
+            // read the data
+            mValues = ( double * ) malloc(mMemorySize * sizeof( double ) );
+            file.read("values", mValues, mMemorySize );
+        }
     }
 
 //----------------------------------------------------------------------------
