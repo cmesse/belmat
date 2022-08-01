@@ -7,7 +7,7 @@
 
 #include "mpitools_comm.h"
 
-#include "database.h"
+#include "material.h"
 namespace mpitools
 {
 //------------------------------------------------------------------------------
@@ -45,47 +45,63 @@ namespace mpitools
 int main( int    argc,
          char * argv[] )
 {
-
+    // initialize MPI
     mpitools::init( &argc, &argv );
 
-    if( mpitools::comm_rank() == 0 ) {
-        std::cout << "Database Hello World!" << std::endl;
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    /*
+     * Material selection.
+     */
+
+    // we assume copper rrr=50 as default
+    std::string database = "materials.hdf5" ;
+    std::string label = "copper" ;
+    uint rrr = 0 ;
+
+    // otherwise, we take the values from the console
+    if( argc > 1 )
+    {
+        label = std::string( argv[ 1 ] );
+    }
+    if( argc > 2 )
+    {
+        rrr = std::stoi( std::string( argv[ 2 ] ) );
     }
 
-    // this is the constructor for the database
-    //belmat::database currentmap( "database.hdf5", "SultanDelta" );
-    belmat::database heat( "materials.hdf5", "HastelloyCp" );
-    //belmat::database lambda( "materials.hdf5", "CopperK_RRR300" );
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    // the temperature in K
-    double T = 20.0 ; // 7 ;
+    // create the material
+    belmat::material mat( database, label, rrr );
 
-    // magnetic flux density in T
-    double B = 15.0 ;; 6.11 ;
+    if( mpitools::comm_rank() == 0 )
+    {
+        double T = 0.0 ;
+        std::cout << mat.label() << std::endl ;
+        std::cout << "    density @298.15K: " << mat.density() << std::endl ;
+        while( T < 300 )
+        {
+            std::cout << "    " << T ;
 
-    // angle in rad
-    double theta = 1.5708 ; //0.5236 ;
+            if( mat.has_cp() )
+            {
+                std::cout << " " << mat.cp( T ) ;
+            }
+            if( mat.has_k() )
+            {
+                std::cout << " " << mat.k( T ) ;
+            }
+            if( mat.has_rho() )
+            {
+                std::cout << " " << mat.rho( T ) ;
+            }
+            std::cout << std::endl ;
+            T += 5.0 ;
+        }
+    }
 
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    // now we compute the analytic value of the dummy function
-    // this function will act as our blackbox.
-    // now we must do the following things
-    //
-    // 1: find out how to link the libbelmat.a to SparseLizard
-    // 2: find out how to translate this blackbox function into
-    //    a SparseLizard expression
-    //double jc = currentmap.compute( T, B, theta ) ;
-    //double lambda_value = lambda.compute( T, B );
-    double cp_value = heat.compute( T );
-
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-    // print the result
-    //std::cout << "proc " << mpitools::comm_rank() << ": T=" << T << " B=" << B << " theta=" << theta << " jc=" << jc << std::endl ;
-
-
-    std::cout << "proc " << mpitools::comm_rank() << ": T=" << T << " B=" << B << " cp=" << cp_value << std::endl ;
 
     return mpitools::finanize() ;
 }

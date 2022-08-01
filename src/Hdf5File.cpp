@@ -523,8 +523,29 @@ Hdf5File::write( const std::string & label, const double * value, const hsize_t 
 //------------------------------------------------------------------------------
 
 void
-Hdf5File::write( const std::string & label, const long double * value, const hsize_t size ){
+Hdf5File::write( const std::string & label, const long double * value, const hsize_t size )
+{
 #ifdef HDF5
     hdf5tools::write_array( mActiveGroup, label, value, size, mStatus );
 #endif
 }
+
+//------------------------------------------------------------------------------
+
+bool
+Hdf5File::dataset_exists( const std::string & label )
+{
+    return hdf5tools::dataset_exists( mActiveGroup, label );
+}
+
+
+//------------------------------------------------------------------------------
+
+bool
+Hdf5File::group_exists( const std::string & label )
+{
+    return hdf5tools::group_exists( mActiveGroup, label );
+}
+
+//------------------------------------------------------------------------------
+

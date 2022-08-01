@@ -27,7 +27,26 @@ namespace belmat
 
         // link the shape function
         this->link_interpolation_function();
+#endif
+    }
 
+//----------------------------------------------------------------------------
+
+    // the database constructor (passing database)
+    database::database( Hdf5File & file ,
+        const std::string & tablename )
+    {
+#ifdef HDF5
+        if( mpitools::comm_rank() == 0 )
+        {
+            this->load_from_file(file, tablename);
+        }
+
+        // send data from master to others
+        this->distribute_data() ;
+
+        // link the shape function
+        this->link_interpolation_function();
 #endif
     }
 
@@ -359,11 +378,22 @@ namespace belmat
             const std::string & filename,
             const std::string & tablename )
     {
-        // reset data
-        this->free();
-
         // open the database
         Hdf5File file( filename, Hdf5FileMode::OPEN_RDONLY );
+
+        this->load_from_file( file, tablename );
+        file.close();
+    }
+
+//----------------------------------------------------------------------------
+
+    void
+    database::load_from_file(
+            Hdf5File & file,
+            const std::string & tablename )
+    {
+        // reset data
+        this->free();
 
         // select the group
         file.select_group( tablename );
@@ -434,6 +464,7 @@ namespace belmat
             mValues = ( double * ) malloc(mMemorySize * sizeof( double ) );
             file.read("values", mValues, mMemorySize );
         }
+        file.close_active_group();
     }
 
 //----------------------------------------------------------------------------
@@ -770,7 +801,7 @@ namespace belmat
         const double b = -0.25 * xi * zeta;
         const double c = -0.25 * xi * eta;
         const double d = 0.125 * xi * eta * zeta;
-        
+
         mWork[  0 ] *=  d * ( eta - 1.0 ) * ( xi - 1.0 ) * ( zeta - 1.0 );
         mWork[  1 ] *=  d * ( eta - 1.0 ) * ( xi + 1.0 ) * ( zeta - 1.0 );
         mWork[  2 ] *=  d * ( eta + 1.0 ) * ( xi + 1.0 ) * ( zeta - 1.0 );

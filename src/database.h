@@ -7,9 +7,14 @@
 
 #include <cmath>
 #include <string>
+#include "Hdf5File.h"
 
 namespace belmat
 {
+//------------------------------------------------------------------------
+
+    typedef unsigned int        uint;
+
 //------------------------------------------------------------------------
 
     class database
@@ -58,8 +63,14 @@ namespace belmat
     public:
 //----------------------------------------------------------------------------
 
-        // the database constructor
+        // the database constructor (standalone via filename)
         database( const std::string & filename,
+                  const std::string & tablename );
+
+//----------------------------------------------------------------------------
+
+        // the database constructor (passing database)
+        database( Hdf5File & file ,
                   const std::string & tablename );
 
 //----------------------------------------------------------------------------
@@ -71,6 +82,12 @@ namespace belmat
 
         void
         load_from_file( const std::string & filename,
+                        const std::string & tablename );
+
+//------------------------------------------------------------------------
+
+        void
+        load_from_file( Hdf5File          & file,
                         const std::string & tablename );
 
 //----------------------------------------------------------------------------
@@ -110,6 +127,28 @@ namespace belmat
         double
         compute( const double T, const double B, const double theta ) ;
 
+//----------------------------------------------------------------------------
+
+        /**
+         * returns the number of dimensions: 1, 2 or 3
+         */
+        inline uint
+        numparams() const
+        {
+            return mNumberOfDimensions ;
+        }
+
+//----------------------------------------------------------------------------
+
+        /**
+         * direct access to interpolation function (for material)
+         */
+        inline double
+        interpolate( const double *x )
+        {
+            return ( this->*mInterpolate )( x );
+        }
+
 //------------------------------------------------------------------------
     private:
 //------------------------------------------------------------------------
@@ -127,8 +166,8 @@ namespace belmat
 
 //----------------------------------------------------------------------------
 
-         void
-         link_interpolation_function();
+        void
+        link_interpolation_function();
 
 //----------------------------------------------------------------------------
 
@@ -304,7 +343,6 @@ namespace belmat
                        + mCoeffs[ k+2 ] ) * X
                        + mCoeffs[ k+3 ]  ;
         }
-
 //------------------------------------------------------------------------
     };
 //------------------------------------------------------------------------

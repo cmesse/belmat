@@ -1,6 +1,7 @@
 set( LIBNAME belmat )
 
 set( SOURCES
+        material.cpp
         database.cpp
         Hdf5File.cpp
         )
