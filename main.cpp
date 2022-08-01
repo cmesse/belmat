@@ -57,12 +57,13 @@ int main( int    argc,
     // we assume copper rrr=50 as default
     std::string database = "materials.hdf5" ;
     std::string label = "copper" ;
-    uint rrr = 0 ;
+    uint rrr = 50 ;
 
     // otherwise, we take the values from the console
     if( argc > 1 )
     {
         label = std::string( argv[ 1 ] );
+        rrr = 0 ;
     }
     if( argc > 2 )
     {
@@ -75,7 +76,7 @@ int main( int    argc,
     belmat::material mat( database, label, rrr );
 
     double B = 0.0 ;
-    
+
     if( mpitools::comm_rank() == 0 )
     {
         double T = 0.0 ;
