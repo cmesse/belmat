@@ -74,6 +74,8 @@ int main( int    argc,
     // create the material
     belmat::material mat( database, label, rrr );
 
+    double B = 0.0 ;
+    
     if( mpitools::comm_rank() == 0 )
     {
         double T = 0.0 ;
@@ -89,11 +91,11 @@ int main( int    argc,
             }
             if( mat.has_k() )
             {
-                std::cout << " " << mat.k( T ) ;
+                std::cout << " " << mat.k( T, B ) ;
             }
             if( mat.has_rho() )
             {
-                std::cout << " " << mat.rho( T ) ;
+                std::cout << " " << mat.rho( T, B ) ;
             }
             std::cout << std::endl ;
             T += 5.0 ;
