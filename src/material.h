@@ -5,6 +5,7 @@
 #ifndef BELMAT_MATERIAL_HPP
 #define BELMAT_MATERIAL_HPP
 
+#include <cassert>
 #include <string>
 #include "database.h"
 
